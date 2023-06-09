@@ -47,7 +47,7 @@ export type CompareOptions = CompareImagesOpts & {
   maskRegions: MaskRegions
 }
 
-export const snapshotsDirName = '__snapshots__'
+export const defaultSnapshotsDirName = '__snapshots__'
 
 /**
  * Compare pdf to persisted snapshot. If one does not exist it is created
@@ -57,14 +57,16 @@ export const snapshotsDirName = '__snapshots__'
  * @param compareOptions - image comparison options
  * @param compareOptions.tolerance - number value for error tolerance, ranges 0-1 (default: 0)
  * @param compareOptions.maskRegions - `(page: number) => ReadonlyArray<RegionMask> | undefined` mask predefined regions per page, i.e. when there are parts of the pdf that change between tests
+ * @param snapshotsDirName - folder name where snapshots are created
  */
 export const comparePdfToSnapshot = (
   pdf: string | Buffer,
   snapshotDir: string,
   snapshotName: string,
   { maskRegions = () => [], ...restOpts }: Partial<CompareOptions> = {},
+  snapshotsDirName?: string,
 ): Promise<boolean> => {
-  const dir = join(snapshotDir, snapshotsDirName)
+  const dir = join(snapshotDir, snapshotsDirName ?? defaultSnapshotsDirName)
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true })
   }

@@ -1,7 +1,7 @@
 import { read } from 'jimp'
 import {
   comparePdfToSnapshot,
-  snapshotsDirName,
+  defaultSnapshotsDirName,
   CompareOptions,
   RegionMask,
 } from './compare-pdf-to-snapshot'
@@ -19,10 +19,12 @@ const singlePageSmallPdfPath = join(pdfs, 'single-page-small.pdf')
 const singlePagePdfPath = join(pdfs, 'single-page.pdf')
 const twoPagePdfPath = join(pdfs, 'two-page.pdf')
 
+const customSnapshotsDirName = '_snaps_'
+
 describe('comparePdfToSnapshot()', () => {
   it('should create new snapshot, when one does not exists', () => {
     const snapshotName = 'single-page-small'
-    const snapshotPath = join(__dirname, snapshotsDirName, snapshotName + '.png')
+    const snapshotPath = join(__dirname, defaultSnapshotsDirName, snapshotName + '.png')
     if (existsSync(snapshotPath)) {
       unlinkSync(snapshotPath)
     }
@@ -36,9 +38,24 @@ describe('comparePdfToSnapshot()', () => {
   it('should fail and create diff with new version', () =>
     comparePdfToSnapshot(singlePagePdfPath, __dirname, 'two-page').then((x) => {
       expect(x).to.be.false
-      const snapshotDiffPath = join(__dirname, snapshotsDirName, 'two-page.diff.png')
+      const snapshotDiffPath = join(__dirname, defaultSnapshotsDirName, 'two-page.diff.png')
       expect(existsSync(snapshotDiffPath)).to.eq(true, 'diff is not created')
-      const snapshotNewPath = join(__dirname, snapshotsDirName, 'two-page.new.png')
+      const snapshotNewPath = join(__dirname, defaultSnapshotsDirName, 'two-page.new.png')
+      expect(existsSync(snapshotNewPath)).to.eq(true, 'new is not created')
+    }))
+
+  it('should fail and create diff with new version on custom snapshotsDirName', () =>
+    comparePdfToSnapshot(
+      singlePagePdfPath,
+      __dirname,
+      'custom_folder',
+      undefined,
+      customSnapshotsDirName,
+    ).then((x) => {
+      expect(x).to.be.false
+      const snapshotDiffPath = join(__dirname, customSnapshotsDirName, 'custom_folder.diff.png')
+      expect(existsSync(snapshotDiffPath)).to.eq(true, 'diff is not created')
+      const snapshotNewPath = join(__dirname, customSnapshotsDirName, 'custom_folder.new.png')
       expect(existsSync(snapshotNewPath)).to.eq(true, 'new is not created')
     }))
 
@@ -131,7 +148,7 @@ describe('comparePdfToSnapshot()', () => {
 
     it('should create initial masked image', () => {
       const snapshotName = 'initial-rectangle-masks'
-      const snapshotPath = join(__dirname, snapshotsDirName, snapshotName + '.png')
+      const snapshotPath = join(__dirname, defaultSnapshotsDirName, snapshotName + '.png')
       const expectedImagePath = join(
         __dirname,
         './test-data',
