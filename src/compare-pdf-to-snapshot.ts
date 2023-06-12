@@ -47,6 +47,11 @@ export type CompareOptions = CompareImagesOpts & {
   maskRegions: MaskRegions
 }
 
+export type Options = {
+  snapshotsDirName?: string
+  failOnMissing?: boolean
+}
+
 export const defaultSnapshotsDirName = '__snapshots__'
 
 /**
@@ -57,14 +62,16 @@ export const defaultSnapshotsDirName = '__snapshots__'
  * @param compareOptions - image comparison options
  * @param compareOptions.tolerance - number value for error tolerance, ranges 0-1 (default: 0)
  * @param compareOptions.maskRegions - `(page: number) => ReadonlyArray<RegionMask> | undefined` mask predefined regions per page, i.e. when there are parts of the pdf that change between tests
- * @param snapshotsDirName - folder name where snapshots are created
+ * @param options - processing options
+ * @param options.snapshotsDirName - folder name where snapshots are created
+ * @param options.failOnMissing - folder name where snapshots are created
  */
 export const comparePdfToSnapshot = (
   pdf: string | Buffer,
   snapshotDir: string,
   snapshotName: string,
   { maskRegions = () => [], ...restOpts }: Partial<CompareOptions> = {},
-  snapshotsDirName?: string,
+  { snapshotsDirName, failOnMissing }: Partial<Options> = {},
 ): Promise<boolean> => {
   const dir = join(snapshotDir, snapshotsDirName ?? defaultSnapshotsDirName)
   if (!existsSync(dir)) {
@@ -72,19 +79,20 @@ export const comparePdfToSnapshot = (
   }
 
   const snapshotPath = join(dir, snapshotName + '.png')
+  const newSnapshotPath = join(dir, snapshotName + '.new.png')
+  const diffSnapshotPath = join(dir, snapshotName + '.diff.png')
 
   if (!existsSync(snapshotPath)) {
     return pdf2png(pdf)
       .then(maskImgWithRegions(maskRegions))
-      .then(writeImages(snapshotPath))
-      .then(() => true)
+      .then(writeImages(failOnMissing ? newSnapshotPath : snapshotPath))
+      .then(() => (failOnMissing ? false : true))
   }
 
   return pdf2png(pdf)
     .then(maskImgWithRegions(maskRegions))
     .then((images) =>
       compareImages(snapshotPath, images, restOpts).then((result) => {
-        const diffSnapshotPath = join(dir, snapshotName + '.diff.png')
         if (result.equal) {
           if (existsSync(diffSnapshotPath)) {
             unlinkSync(diffSnapshotPath)
@@ -92,7 +100,6 @@ export const comparePdfToSnapshot = (
           return true
         }
 
-        const newSnapshotPath = join(dir, snapshotName + '.new.png')
         return writeImages(newSnapshotPath)(images)
           .then(() => writeImages(diffSnapshotPath)(result.diffs.map((x) => x.diff)))
           .then(() => false)

@@ -35,6 +35,21 @@ describe('comparePdfToSnapshot()', () => {
     })
   })
 
+  it('should create new snapshot, when one does not exists, but fail if "failOnMissing" is specified', () => {
+    const snapshotName = 'single-page-small'
+    const snapshotPath = join(__dirname, defaultSnapshotsDirName, snapshotName + '.new.png')
+    if (existsSync(snapshotPath)) {
+      unlinkSync(snapshotPath)
+    }
+    return comparePdfToSnapshot(singlePageSmallPdfPath, __dirname, snapshotName, undefined, {
+      failOnMissing: true,
+    }).then((x) => {
+      expect(x).to.be.false
+      expect(existsSync(snapshotPath)).to.be.true
+      unlinkSync(snapshotPath)
+    })
+  })
+
   it('should fail and create diff with new version', () =>
     comparePdfToSnapshot(singlePagePdfPath, __dirname, 'two-page').then((x) => {
       expect(x).to.be.false
@@ -45,13 +60,9 @@ describe('comparePdfToSnapshot()', () => {
     }))
 
   it('should fail and create diff with new version on custom snapshotsDirName', () =>
-    comparePdfToSnapshot(
-      singlePagePdfPath,
-      __dirname,
-      'custom_folder',
-      undefined,
-      customSnapshotsDirName,
-    ).then((x) => {
+    comparePdfToSnapshot(singlePagePdfPath, __dirname, 'custom_folder', undefined, {
+      snapshotsDirName: customSnapshotsDirName,
+    }).then((x) => {
       expect(x).to.be.false
       const snapshotDiffPath = join(__dirname, customSnapshotsDirName, 'custom_folder.diff.png')
       expect(existsSync(snapshotDiffPath)).to.eq(true, 'diff is not created')
