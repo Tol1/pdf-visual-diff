@@ -39,10 +39,9 @@
   },
   "homepage": "https://github.com/moshensky/pdf-visual-diff#readme",
   "dependencies": {
-    "canvas": "^2.11.2",
     "glob": "^10.2.1",
     "jimp": "^0.22.7",
-    "pdfjs-dist": "^3.5.141",
+    "pdf2pic": "^2.2.1",
     "yargs": "^17.7.1"
   },
   "devDependencies": {

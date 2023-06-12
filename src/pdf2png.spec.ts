@@ -14,7 +14,7 @@ describe('pdf2png()', () => {
   it('two-page.pdf png per page and without scaling', () => {
     const expectedImage1Path = join(expectedDir, 'two-page_png_per_page_1.png')
     const expectedImage2Path = join(expectedDir, 'two-page_png_per_page_2.png')
-    return pdf2png(twoPage, { scaleImage: false })
+    return pdf2png(twoPage)
       .then((imgs) =>
         Promise.all([
           compareImages(expectedImage1Path, [imgs[0]]),
